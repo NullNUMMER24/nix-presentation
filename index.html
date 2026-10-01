@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title></title>
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/night.css" id="theme" />
+    <link rel="stylesheet" href="plugin/highlight/monokai.css" />
+	<link rel="stylesheet" href="css/layout.css" />
+	<link rel="stylesheet" href="plugin/customcontrols/style.css">
+
+
+
+    <script defer src="dist/fontawesome/all.min.js"></script>
+
+	<script type="text/javascript">
+		var forgetPop = true;
+		function onPopState(event) {
+			if(forgetPop){
+				forgetPop = false;
+			} else {
+				parent.postMessage(event.target.location.href, "app://obsidian.md");
+			}
+        }
+		window.onpopstate = onPopState;
+		window.onmessage = event => {
+			if(event.data == "reload"){
+				window.document.location.reload();
+			}
+			forgetPop = true;
+		}
+
+		function fitElements(){
+			const itemsToFit = document.getElementsByClassName('fitText');
+			for (const item in itemsToFit) {
+				if (Object.hasOwnProperty.call(itemsToFit, item)) {
+					var element = itemsToFit[item];
+					fitElement(element,1, 1000);
+					element.classList.remove('fitText');
+				}
+			}
+		}
+
+		function fitElement(element, start, end){
+
+			let size = (end + start) / 2;
+			element.style.fontSize = `${size}px`;
+
+			if(Math.abs(start - end) < 1){
+				while(element.scrollHeight > element.offsetHeight){
+					size--;
+					element.style.fontSize = `${size}px`;
+				}
+				return;
+			}
+
+			if(element.scrollHeight > element.offsetHeight){
+				fitElement(element, start, size);
+			} else {
+				fitElement(element, size, end);
+			}		
+		}
+
+
+		document.onreadystatechange = () => {
+			fitElements();
+			if (document.readyState === 'complete') {
+				if (window.location.href.indexOf("?export") != -1){
+					parent.postMessage(event.target.location.href, "app://obsidian.md");
+				}
+				if (window.location.href.indexOf("print-pdf") != -1){
+					let stateCheck = setInterval(() => {
+						clearInterval(stateCheck);
+						window.print();
+					}, 250);
+				}
+			}
+	};
+
+
+        </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 20% 25%, #24365f 0%, #0b0f19 62%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="flake" style="position: absolute; left: 55%; top: 2%; height: 95%; width: 45%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+❄︎
+
+</div>
+
+<div class="" style="position: absolute; left: 6%; top: 18%; height: 12%; width: 60%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="kicker">DevSecOps · Infrastructure as Code</span>
+
+</div>
+
+<div class="" style="position: absolute; left: 6%; top: 28%; height: 24%; width: 60%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+# Nix<span class="grad">OS</span>
+
+</div>
+
+<div class="fadeIn slow" style="position: absolute; left: 6%; top: 52%; height: 26%; width: 62%; display: flex; flex-direction: column; align-items: start; justify-content: flex-start" align="left">
+
+
+<span class="tagline">The Linux distribution you can <code>git&nbsp;diff</code></span>
+
+<span class="pills"><span class="pill">Declarative</span> <span class="pill">Reproducible</span> <span class="pill">Reliable</span></span>
+
+</div>
+
+<div class="" style="position: absolute; left: 6%; top: 86%; height: 8%; width: 60%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="muted">CJ · Presentation · 02.10.2026</span>
+
+</div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap');
+:root {
+  --nix-bg: #0b0f19;
+  --nix-blue: #5277C3;
+  --nix-light: #7EBAE4;
+  --nix-accent: #F5A97F;
+  --r-main-font: 'Inter', system-ui, sans-serif;
+  --r-heading-font: 'Inter', system-ui, sans-serif;
+  --r-code-font: 'JetBrains Mono', ui-monospace, monospace;
+  --r-heading-color: #eef4fb;
+  --r-main-color: #d7e2ee;
+  --r-link-color: #7EBAE4;
+}
+.reveal-viewport {
+  background-color: var(--nix-bg) !important;
+  background-image:
+    radial-gradient(rgba(126,186,228,0.07) 1px, transparent 1px),
+    radial-gradient(circle at 85% 0%, #1b2a4a 0%, #0b0f19 55%) !important;
+  background-size: 28px 28px, cover !important;
+}
+.reveal .slides section { text-align: left; }
+.reveal h1, .reveal h2, .reveal h3 { text-transform: none; letter-spacing: -0.02em; font-weight: 800; }
+.reveal h2 { font-size: 1.25em; margin: 0; }
+.reveal h2::after {
+  content: ""; display: block; width: 80px; height: 4px; margin-top: 0.2em; border-radius: 2px;
+  background: linear-gradient(90deg, var(--nix-blue), var(--nix-light), var(--nix-accent));
+}
+.center-text, .center-text h1, .center-text h2 { text-align: center; }
+.center-text h2::after { margin-left: auto; margin-right: auto; }
+.grad {
+  background: linear-gradient(90deg, #9fd3f5, var(--nix-blue) 55%, var(--nix-accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.kicker { color: var(--nix-accent); font-size: 0.5em; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; }
+.tagline { display: block; font-size: 0.9em; font-weight: 600; line-height: 1.35; color: #cfe0f0; }
+.tagline code { white-space: nowrap; }
+.pills { display: block; margin-top: 0.9em; line-height: 1; }
+.muted { opacity: 0.6; font-size: 0.6em; }
+.pill {
+  display: inline-block; padding: 0.25em 0.9em; margin-right: 0.35em; border-radius: 999px;
+  border: 1px solid rgba(126,186,228,0.45); background: rgba(126,186,228,0.1);
+  font-size: 0.45em; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #cfe6f7;
+}
+.flake { font-size: 22em; line-height: 1; color: rgba(126,186,228,0.09); }
+.chapter-num {
+  font-size: 13em; font-weight: 800; line-height: 1; color: transparent;
+  -webkit-text-stroke: 2px rgba(126,186,228,0.22);
+}
+.card {
+  position: relative; overflow: hidden; font-size: 0.6em;
+  background: linear-gradient(180deg, rgba(126,186,228,0.13), rgba(126,186,228,0.03));
+  border: 1px solid rgba(126,186,228,0.28); border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--nix-blue), var(--nix-light), var(--nix-accent));
+}
+.card h3 { color: var(--nix-light); font-size: 1.45em; margin-bottom: 0.3em; }
+.card ul { margin-left: 1em; }
+.card li { margin: 0.35em 0; }
+.mini { font-size: 0.5em; }
+.mini h3 { font-size: 1.3em; margin: 0.1em 0; }
+.agenda { font-size: 0.5em !important; line-height: 1.35; }
+.agenda .num { display: block; font-size: 1em; margin-bottom: 0.15em; }
+.agenda .a-title { display: block; font-size: 1.3em; font-weight: 800; color: var(--nix-light); }
+.agenda .a-sub { display: block; font-size: 0.95em; opacity: 0.7; margin-top: 0.1em; }
+.num { font-family: var(--r-code-font); color: var(--nix-accent); font-size: 0.9em; font-weight: 600; }
+.big-icon { font-size: 2.6em; line-height: 1.1; color: var(--nix-light); font-weight: 800; }
+.reveal pre {
+  position: relative; width: 100%; margin: 0; padding: 0; overflow: hidden;
+  font-size: 0.42em; background: #161b26; border: 1px solid rgba(126,186,228,0.2);
+  border-radius: 12px; box-shadow: 0 20px 45px rgba(0,0,0,0.5);
+}
+.reveal pre::before {
+  content: ""; position: absolute; top: 12px; left: 16px; width: 11px; height: 11px; border-radius: 50%; z-index: 5;
+  background: #ff5f56; box-shadow: 18px 0 #ffbd2e, 36px 0 #27c93f;
+}
+.reveal pre code {
+  background: #161b26 !important; border: none !important; border-radius: 0 !important; box-shadow: none !important;
+  margin: 0 !important; padding: 38px 1.2em 1em !important; max-height: 600px;
+}
+.reveal :not(pre) > code {
+  background: rgba(126,186,228,0.13); color: #bfe0f5; padding: 0.05em 0.35em; border-radius: 6px; font-size: 0.85em;
+}
+.reveal table {
+  width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.6em;
+  border: 1px solid rgba(126,186,228,0.25); border-radius: 14px; overflow: hidden;
+}
+.reveal table th { background: rgba(82,119,195,0.35); color: #fff; padding: 0.7em 1em; border: none; }
+.reveal table td { padding: 0.6em 1em; border: none; border-top: 1px solid rgba(126,186,228,0.12); }
+.reveal table tr:nth-child(even) td { background: rgba(126,186,228,0.05); }
+.compare td:last-child, .compare th:last-child { background: rgba(245,169,127,0.16) !important; color: #fff; font-weight: 700; }
+.steps { font-size: 0.72em; }
+.steps ol { list-style: none; counter-reset: s; margin: 0; padding: 0; }
+.steps li {
+  counter-increment: s; position: relative; margin: 0 0 0 0.9em; padding: 0.45em 0 0.45em 1.8em;
+  border-left: 2px solid rgba(126,186,228,0.25);
+}
+.steps li::before {
+  content: counter(s); position: absolute; left: -0.9em; top: 0.4em; width: 1.8em; height: 1.8em;
+  border-radius: 50%; text-align: center; line-height: 1.8em; font-size: 0.8em; font-weight: 800;
+  color: var(--nix-bg); background: linear-gradient(135deg, var(--nix-blue), var(--nix-light));
+}
+.shot img { max-height: 470px; border-radius: 12px; box-shadow: 0 20px 45px rgba(0,0,0,0.5); }
+.reveal .mermaid .node rect, .reveal .mermaid .node polygon, .reveal .mermaid .node circle, .reveal .mermaid .node path {
+  fill: rgba(82,119,195,0.2) !important; stroke: #7EBAE4 !important;
+}
+.reveal .mermaid .nodeLabel { color: #e6edf7 !important; }
+.reveal .mermaid .edgePath path, .reveal .mermaid .flowchart-link { stroke: #7EBAE4 !important; }
+.reveal .mermaid .marker { fill: #7EBAE4 !important; stroke: #7EBAE4 !important; }
+.reveal .mermaid .edgeLabel, .reveal .mermaid .edgeLabel rect { background-color: #0b0f19 !important; fill: #0b0f19 !important; color: #e6edf7 !important; }
+.reveal .mermaid { width: 100% !important; }
+.reveal .mermaid svg {
+  display: block; margin: 0 auto; width: 100% !important; max-width: 100% !important;
+  height: auto !important; max-height: 470px;
+}
+
+/* --- motion --- */
+@keyframes shimmer { to { background-position: 200% center; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.grad {
+  background-image: linear-gradient(90deg, #9fd3f5, #5277C3, #F5A97F, #9fd3f5) !important;
+  background-size: 200% auto !important; animation: shimmer 7s linear infinite;
+}
+.flake p { display: inline-block; animation: spin 120s linear infinite; }
+.chapter-num { animation: breathe 5s ease-in-out infinite; }
+/* --- cards: frosted glass + glow on the newest revealed card --- */
+.card { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: box-shadow .4s ease, border-color .4s ease; }
+.reveal .card.current-fragment {
+  border-color: rgba(245,169,127,0.6);
+  box-shadow: 0 0 0 1px rgba(245,169,127,0.3), 0 18px 50px rgba(82,119,195,0.45);
+}
+/* --- list items slide up out of a blur --- */
+.reveal li.fragment { transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1), filter .6s ease; }
+.reveal li.fragment:not(.visible) { transform: translateY(14px); filter: blur(6px); }
+/* --- agenda cards appear one after another --- */
+.reveal section .agenda:nth-child(3) { animation-delay: .08s !important; }
+.reveal section .agenda:nth-child(4) { animation-delay: .16s !important; }
+.reveal section .agenda:nth-child(5) { animation-delay: .24s !important; }
+.reveal section .agenda:nth-child(6) { animation-delay: .32s !important; }
+.reveal section .agenda:nth-child(7) { animation-delay: .40s !important; }
+.reveal section .agenda:nth-child(8) { animation-delay: .48s !important; }
+.reveal section .agenda:nth-child(9) { animation-delay: .56s !important; }
+.reveal section .agenda:nth-child(10) { animation-delay: .64s !important; }
+/* --- progress bar & slide number --- */
+.reveal .progress { height: 5px; background: rgba(126,186,228,0.12); }
+.reveal .progress span {
+  background: linear-gradient(90deg, #5277C3, #7EBAE4, #F5A97F);
+  box-shadow: 0 0 12px rgba(126,186,228,0.6);
+}
+.reveal .slide-number {
+  background: rgba(126,186,228,0.12); border: 1px solid rgba(126,186,228,0.3); border-radius: 999px;
+  padding: 4px 12px; font-family: var(--r-code-font); font-size: 14px; color: #cfe6f7;
+}
+/* --- chapter breadcrumb on content slides --- */
+.crumb { font-family: var(--r-code-font); font-size: 0.36em; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(207,230,247,0.5); }
+.crumb b { color: var(--nix-accent); }
+/* --- chapter progress dots --- */
+.dots { display: block; margin-top: 0.6em; line-height: 0; }
+.dots i {
+  display: inline-block; width: 34px; height: 6px; margin-right: 8px; border-radius: 3px;
+  background: rgba(126,186,228,0.2);
+}
+.dots i.on { width: 64px; background: linear-gradient(90deg, #5277C3, #F5A97F); box-shadow: 0 0 12px rgba(245,169,127,0.6); }
+/* --- code windows: title bar with file name --- */
+.reveal pre code { background: linear-gradient(#1d2331 0 30px, #161b26 30px) !important; }
+[class*="win-"] pre::after {
+  position: absolute; top: 8px; left: 0; right: 0; z-index: 5; text-align: center;
+  font-family: var(--r-code-font); font-size: 13px; color: rgba(207,230,247,0.5);
+}
+.win-config pre::after { content: "configuration.nix"; }
+.win-flake pre::after { content: "flake.nix"; }
+.win-shell pre::after { content: "zsh — ~/git/nix"; }
+.win-store pre::after { content: "ls /nix/store"; }
+.reveal .mermaid foreignObject, .reveal .mermaid svg { overflow: visible !important; }
+.reveal .mermaid .nodeLabel, .reveal .mermaid .edgeLabel { white-space: nowrap !important; line-height: 1.5 !important; padding: 0 4px; }
+</style>
+</div>
+
+<aside class="notes"><p>Welcome. One-liner hook: &quot;What if your whole operating system was a single file you could review in a pull request?&quot;</p>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## Agenda
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 4%; top: 22%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">01</span>
+<span class="a-title">🤕 The problem</span>
+<span class="a-sub">Drift & dependency hell</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 36%; top: 22%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">02</span>
+<span class="a-title">❄️ Nix & NixOS</span>
+<span class="a-sub">What they actually are</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 68%; top: 22%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">03</span>
+<span class="a-title">🗄️ The Nix store</span>
+<span class="a-sub">The core trick</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 4%; top: 46%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">04</span>
+<span class="a-title">📜 Declarative config</span>
+<span class="a-sub">Your OS in one file</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 36%; top: 46%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">05</span>
+<span class="a-title">⏪ Generations</span>
+<span class="a-sub">Rollbacks for free</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 68%; top: 46%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">06</span>
+<span class="a-title">🧊 Flakes & friends</span>
+<span class="a-sub">Home Manager, dev shells</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 4%; top: 70%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">07</span>
+<span class="a-title">🔐 DevSecOps</span>
+<span class="a-sub">Security by construction</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 36%; top: 70%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">08</span>
+<span class="a-title">🚀 Deploying</span>
+<span class="a-sub">From one host to a fleet</span>
+
+</div>
+
+<div class="card agenda fadeInUp" style="padding: 0 22px; box-sizing: border-box; position: absolute; left: 68%; top: 70%; height: 20%; width: 28%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="num">09</span>
+<span class="a-title">⚖️ Trade-offs</span>
+<span class="a-sub">& getting started</span>
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 80% 30%, #3a1530 0%, #0b0f19 65%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="chapter-num" style="position: absolute; left: 45%; top: 12%; height: 75%; width: 55%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+01
+
+</div>
+
+<div class="fadeInLeft" style="position: absolute; left: 6%; top: 22%; height: 56%; width: 70%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="kicker">Chapter 01</span>
+
+# The <span class="grad">Problem</span>
+
+<span class="dots"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></span>
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## "It works on my machine" 🤷
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>01</b> · The Problem
+
+</div>
+
+<div class="card fadeInUp fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 4%; top: 28%; height: 52%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: center" data-fragment-index="1">
+
+
+<div class="big-icon">🧬</div>
+
+### Config drift
+
+Servers configured by hand slowly diverge — nobody knows the _real_ state.
+
+</div>
+
+<div class="card fadeInUp fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 35%; top: 28%; height: 52%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: center" data-fragment-index="2">
+
+
+<div class="big-icon">🕸️</div>
+
+### Dependency hell
+
+Two apps need two versions of the same library. One of them loses.
+
+</div>
+
+<div class="card fadeInUp fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 66%; top: 28%; height: 52%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: center" data-fragment-index="3">
+
+
+<div class="big-icon">💥</div>
+
+### Scary upgrades
+
+`apt upgrade` breaks boot — and there's no clean way back.
+
+</div>
+</div>
+
+<aside class="notes"><p>Ask the audience: who has had an upgrade break a machine? Hands up.</p>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 80% 30%, #15294d 0%, #0b0f19 65%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="chapter-num" style="position: absolute; left: 45%; top: 12%; height: 75%; width: 55%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+02
+
+</div>
+
+<div class="fadeInLeft" style="position: absolute; left: 6%; top: 22%; height: 56%; width: 70%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="kicker">Chapter 02</span>
+
+# What is <span class="grad">Nix</span>?
+
+<span class="dots"><i></i><i class="on"></i><i></i><i></i><i></i><i></i></span>
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## Three things with one name
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>02</b> · What is Nix?
+
+</div>
+
+<div class="card zoomIn fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 4%; top: 24%; height: 58%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: center" data-fragment-index="1">
+
+
+<div class="big-icon">λ</div>
+
+### Nix language
+
+A lazy, purely functional language for describing builds.
+
+</div>
+
+<div class="card zoomIn fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 35%; top: 24%; height: 58%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: center" data-fragment-index="2">
+
+
+<div class="big-icon">📦</div>
+
+### Nix package manager
+
+Builds packages in isolation. Runs on any Linux & macOS.
+
+</div>
+
+<div class="card zoomIn fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 66%; top: 24%; height: 58%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: center" data-fragment-index="3">
+
+
+<div class="big-icon">🐧</div>
+
+### NixOS
+
+A full Linux distribution configured _entirely_ through Nix.
+
+</div>
+</div>
+
+<aside class="notes"><p>nixpkgs is the package collection — one of the largest software repositories out there.</p>
+</aside></script></section><section ><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## The core trick: the Nix store
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>02</b> · What is Nix?
+
+</div>
+
+<div class="win-store" style="position: absolute; left: 4%; top: 20%; height: 34%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+```text
+/nix/store/
+├── 9f2k1…-openssl-3.0.14/
+├── x8qa7…-openssl-3.3.1/
+├── b4mz0…-nginx-1.26.2/      → links against x8qa7…-openssl-3.3.1
+└── p1wc3…-legacy-app-2.1/    → links against 9f2k1…-openssl-3.0.14
+```
+
+</div>
+
+<div class="card mini fadeInUp fragment" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 4%; top: 60%; height: 30%; width: 21%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="1">
+
+
+### 🔑 Hashed
+Every path is prefixed with a **hash of all its inputs**
+
+</div>
+
+<div class="card mini fadeInUp fragment" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 28%; top: 60%; height: 30%; width: 21%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="2">
+
+
+### 🧩 No conflicts
+Different inputs → different path
+
+</div>
+
+<div class="card mini fadeInUp fragment" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 52%; top: 60%; height: 30%; width: 21%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="3">
+
+
+### 🔒 Immutable
+Packages never change once built
+
+</div>
+
+<div class="card mini fadeInUp fragment" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 75%; top: 60%; height: 30%; width: 21%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="4">
+
+
+### ♻️ Reproducible
+Same inputs → same output
+
+</div>
+</div>
+
+<aside class="notes"><p>This is the single most important slide. Everything else (rollbacks, dev shells, multiple versions side by side) follows from it.</p>
+</aside></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## How a build works
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>02</b> · What is Nix?
+
+</div>
+
+<div class="" style="position: absolute; left: 4%; top: 24%; height: 66%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+
+<div class="mermaid">
+flowchart LR
+    A[Nix expression] --> B[Derivation .drv]
+    B --> C{Output hash in cache?}
+    C -- yes --> D[Download from binary cache]
+    C -- no --> E[Build in sandbox]
+    D --> F[/nix/store/hash-name/]
+    E --> F
+
+</div>
+
+
+</div>
+</div>
+
+<aside class="notes"><p>Vertical slide (press ↓). Binary caches like cache.nixos.org mean you rarely compile anything yourself.</p>
+</aside></script></section></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 80% 30%, #0f3a3a 0%, #0b0f19 65%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="chapter-num" style="position: absolute; left: 45%; top: 12%; height: 75%; width: 55%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+03
+
+</div>
+
+<div class="fadeInLeft" style="position: absolute; left: 6%; top: 22%; height: 56%; width: 70%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="kicker">Chapter 03</span>
+
+# Declarative <span class="grad">Systems</span>
+
+<span class="dots"><i></i><i></i><i class="on"></i><i></i><i></i><i></i></span>
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## Your whole OS in one file
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>03</b> · Declarative Systems
+
+</div>
+
+<div class="win-config" style="position: absolute; left: 4%; top: 19%; height: 78%; width: 60%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+```nix [1-2|3-5|7-11|13-17|19-20|1-21]
+{ config, pkgs, ... }:
+{
+  # Identity
+  networking.hostName = "atlas";
+  time.timeZone = "Europe/Zurich";
+
+  # Hardened SSH
+  services.openssh = {
+    enable = true;
+    settings.PasswordAuthentication = false;
+  };
+
+  users.users.admin = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ];
+    openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAA…" ];
+  };
+
+  environment.systemPackages = with pkgs; [ git htop kubectl ];
+  networking.firewall.allowedTCPPorts = [ 22 443 ];
+}
+```
+
+</div>
+
+<div class="card mini" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 66%; top: 19%; height: 23%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 📝 Describe, don't script
+State the end result, not the steps
+
+</div>
+
+<div class="card mini" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 66%; top: 46%; height: 23%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 🔁 Idempotent
+Apply it once or a hundred times
+
+</div>
+
+<div class="card mini" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 66%; top: 73%; height: 23%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 👀 Reviewable
+Every change is a readable diff
+
+</div>
+</div>
+
+<aside class="notes"><p>Step through the highlights. Point out: no imperative commands, no &quot;run this then that&quot;. You describe the desired end state.</p>
+</aside></script></section><section ><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## Apply it
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>03</b> · Declarative Systems
+
+</div>
+
+<div class="win-shell" style="position: absolute; left: 4%; top: 20%; height: 28%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+```bash
+# classic
+sudo nixos-rebuild switch
+
+# with a flake
+sudo nixos-rebuild switch --flake .#atlas
+```
+
+</div>
+
+<div class="card fadeInUp fragment" style="padding: 0 28px; box-sizing: border-box; position: absolute; left: 4%; top: 56%; height: 30%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="1">
+
+
+### 💡 What just happened
+
+Nix built the **entire system closure**, wrote a new boot entry and atomically switched to it. If anything fails during the build, your running system is untouched.
+
+</div>
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## 🗂️ Example repository structure
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>03</b> · Declarative Systems
+
+</div>
+
+<div class="win-shell" style="position: absolute; left: 20%; top: 18%; height: 80%; width: 60%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+```text
+$ tree hosts
+hosts
+├── atlas
+│   ├── configuration.nix
+│   ├── default.nix
+│   └── meta.nix
+├── hades
+│   ├── configuration.nix
+│   ├── default.nix
+│   └── meta.nix
+├── hephaestus
+│   ├── configuration.nix
+│   ├── default.nix
+│   ├── hardware-configuration.nix
+│   └── meta.nix
+├── heracles
+│   ├── configuration.nix
+│   ├── default.nix
+│   ├── hardware-configuration.nix
+│   └── meta.nix
+└── kerberos
+    ├── configuration.nix
+    ├── default.nix
+    ├── hardware-configuration.nix
+    └── meta.nix
+```
+
+</div>
+</div></script></section></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## ⏪ Generations & rollbacks
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>03</b> · Declarative Systems
+
+</div>
+
+<div class="" style="position: absolute; left: 4%; top: 20%; height: 46%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+
+<div class="mermaid">
+flowchart LR
+    G41["✅ Gen 41 · stable"] --> G42["✅ Gen 42 · stable"]
+    G42 --> G43["💥 Gen 43 · broken"]
+    G43 -. "nixos-rebuild --rollback" .-> G42
+
+</div>
+
+
+</div>
+
+<div class="card fadeInUp fragment" style="padding: 0 28px; box-sizing: border-box; position: absolute; left: 4%; top: 72%; height: 18%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="1">
+
+
+Every generation is kept in the boot menu — **rollback is a reboot away**, even if the system won't start.
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## 🧊 Flakes — pinned & composable
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>03</b> · Declarative Systems
+
+</div>
+
+<div class="win-flake" style="position: absolute; left: 4%; top: 20%; height: 76%; width: 60%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+```nix [2|3-7|8-17]
+{
+  description = "My NixOS fleet";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+  };
+  outputs = { self, nixpkgs, home-manager, ... }: {
+    nixosConfigurations.atlas = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        ./hosts/atlas/configuration.nix
+        home-manager.nixosModules.home-manager
+      ];
+    };
+  };
+}
+```
+
+</div>
+
+<div class="card mini" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 66%; top: 20%; height: 23%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 📥 inputs
+Pinned sources: nixpkgs, home-manager, …
+
+</div>
+
+<div class="card mini" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 66%; top: 46%; height: 23%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 📤 outputs
+Systems, packages, dev shells, checks
+
+</div>
+
+<div class="card mini" style="padding: 0 18px; box-sizing: border-box; position: absolute; left: 66%; top: 72%; height: 23%; width: 30%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 🔒 flake.lock
+An exact commit for every input
+
+</div>
+</div>
+
+<aside class="notes"><p>flake.lock pins every input to an exact commit — like go.sum or package-lock.json, but for your whole OS.</p>
+</aside></script></section><section ><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## More building blocks
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>03</b> · Declarative Systems
+
+</div>
+
+<div class="card fadeInLeft fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 4%; top: 21%; height: 33%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="1">
+
+
+### 🏠 Home Manager
+
+Dotfiles, shells, editors & user packages — declared the same way.
+
+</div>
+
+<div class="card fadeInRight fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 52%; top: 21%; height: 33%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="2">
+
+
+### 🛠️ Dev shells
+
+Per-project toolchains via `nix develop`. No global installs.
+
+</div>
+
+<div class="card fadeInLeft fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 4%; top: 59%; height: 33%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="3">
+
+
+### 🐳 dockerTools
+
+Build minimal OCI images straight from Nix — no Dockerfile.
+
+</div>
+
+<div class="card fadeInRight fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 52%; top: 59%; height: 33%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="4">
+
+
+### 💿 nixos-generators
+
+Produce ISOs, cloud images and VMs from the same config.
+
+</div>
+</div></script></section><section data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## Dev shell example
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>03</b> · Declarative Systems
+
+</div>
+
+<div class="win-flake" style="position: absolute; left: 4%; top: 20%; height: 40%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+```nix
+devShells.x86_64-linux.default = pkgs.mkShell {
+  packages = with pkgs; [ go gopls python3 nodejs kubectl trivy ];
+  shellHook = ''
+    echo "🚀 Dev env ready"
+  '';
+};
+```
+
+</div>
+
+<div class="win-shell" style="position: absolute; left: 4%; top: 66%; height: 16%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+```bash
+nix develop   # everyone gets the exact same toolchain
+```
+
+</div>
+</div>
+
+<aside class="notes"><p>Pair with direnv (<code>use flake</code>) so the shell activates automatically when you cd into the repo.</p>
+</aside></script></section></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 80% 30%, #3a1414 0%, #0b0f19 65%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="chapter-num" style="position: absolute; left: 45%; top: 12%; height: 75%; width: 55%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+04
+
+</div>
+
+<div class="fadeInLeft" style="position: absolute; left: 6%; top: 22%; height: 56%; width: 70%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="kicker">Chapter 04</span>
+
+# 🔐 NixOS for <span class="grad">DevSecOps</span>
+
+<span class="dots"><i></i><i></i><i></i><i class="on"></i><i></i><i></i></span>
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## Security by construction
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>04</b> · NixOS for DevSecOps
+
+</div>
+
+<div class="card" style="padding: 0 26px; box-sizing: border-box; position: absolute; left: 4%; top: 21%; height: 70%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 🏗️ Build time
+
+- 🔁 **Reproducible builds** — verify what you ship <!-- .element: class="fragment" -->
+- 🧾 **Full dependency graph** — SBOMs come almost for free <!-- .element: class="fragment" -->
+- 🔍 **Every change reviewed** — infra changes are PRs <!-- .element: class="fragment" -->
+- 🧊 **Minimal surface** — only what you declare is installed <!-- .element: class="fragment" -->
+
+</div>
+
+<div class="card" style="padding: 0 26px; box-sizing: border-box; position: absolute; left: 52%; top: 21%; height: 70%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 🛰️ Run time
+
+- 🗝️ **Secrets** via `sops-nix` or `agenix` <!-- .element: class="fragment" -->
+- 🛡️ **Hardening** modules & systemd sandboxing <!-- .element: class="fragment" -->
+- ⏪ **Fast recovery** — rollback after a bad patch <!-- .element: class="fragment" -->
+- 🌬️ **Impermanence** — wipe root on every boot <!-- .element: class="fragment" -->
+
+</div>
+</div>
+
+<aside class="notes"><p>Tie back to GitOps: the Git repo IS the source of truth, and drift is structurally impossible for anything Nix manages.</p>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## GitOps flow
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>04</b> · NixOS for DevSecOps
+
+</div>
+
+<div class="" style="position: absolute; left: 4%; top: 22%; height: 70%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+
+<div class="mermaid">
+flowchart LR
+    Dev["💻 Commit"] --> PR["Pull request + review"]
+    PR --> CI["CI: nix flake check + build closures"]
+    CI --> Cache[("Binary cache")]
+    Cache --> Deploy["deploy-rs / colmena"]
+    Deploy --> H1["host-a"]
+    Deploy --> H2["host-b"]
+    Deploy --> H3["host-c"]
+
+</div>
+
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## 🚀 Deploying at scale
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>04</b> · NixOS for DevSecOps
+
+</div>
+
+<div class="fadeIn" style="position: absolute; left: 4%; top: 22%; height: 66%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+| Tool | Style | Good for |
+|---|---|---|
+| `nixos-rebuild --target-host` | Push, built-in | A handful of machines |
+| `deploy-rs` | Push, with auto-rollback | Safer remote deploys |
+| `colmena` | Push, parallel | Fleets, tagging hosts |
+| `nixos-anywhere` | Remote install | Bootstrapping bare metal/VPS |
+
+</div>
+</div>
+
+<aside class="notes"><p>Mention that k3s/kubernetes nodes can be defined declaratively as NixOS modules too.</p>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 80% 30%, #33300f 0%, #0b0f19 65%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="chapter-num" style="position: absolute; left: 45%; top: 12%; height: 75%; width: 55%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+05
+
+</div>
+
+<div class="fadeInLeft" style="position: absolute; left: 6%; top: 22%; height: 56%; width: 70%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="kicker">Chapter 05</span>
+
+# ⚖️ Honest <span class="grad">Trade-offs</span>
+
+<span class="dots"><i></i><i></i><i></i><i></i><i class="on"></i><i></i></span>
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## NixOS vs the usual suspects
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>05</b> · Honest Trade-offs
+
+</div>
+
+<div class="compare fadeIn" style="position: absolute; left: 4%; top: 22%; height: 68%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+| | Traditional distro | Ansible | Docker | Kubernetes | NixOS |
+|---|:-:|:-:|:-:|:-:|:-:|
+| Declarative | ❌ | 🟡 | 🟡 | ✅ | ✅ |
+| Reproducible | ❌ | 🟡 | 🟡 | 🟡 | ✅ |
+| Atomic rollback | ❌ | ❌ | ✅ | 🟡 | ✅ |
+| Whole-OS scope | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Easy to learn | ✅ | ✅ | ✅ | ❌ | ❌ |
+
+</div>
+</div>
+
+<aside class="notes"><p>Kubernetes is declarative, but reproducibility depends on pinning images by digest, and <code>kubectl rollout undo</code> only rolls back single workloads, not the whole cluster. It doesn&#39;t manage the node OS at all. NixOS and Kubernetes complement each other: NixOS for the nodes, Kubernetes for the workloads.</p>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## The rough edges 🪨
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>05</b> · Honest Trade-offs
+
+</div>
+
+<div class="card fadeInLeft fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 4%; top: 24%; height: 58%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="1">
+
+
+<div class="big-icon">😵</div>
+
+### Learning curve
+
+New language, new mental model, error messages that need practice to read.
+
+</div>
+
+<div class="card fadeInRight fragment" style="padding: 0 24px; box-sizing: border-box; position: absolute; left: 52%; top: 24%; height: 58%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left" data-fragment-index="2">
+
+
+<div class="big-icon">📚</div>
+
+### Docs & FHS
+
+Docs are scattered; prebuilt binaries expecting `/usr/lib` need workarounds (`nix-ld`, `buildFHSEnv`).
+
+</div>
+</div>
+
+<aside class="notes"><p>Being honest here builds credibility. Recommend starting with Nix on an existing system before going all-in on NixOS.</p>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 80% 30%, #0f3a2a 0%, #0b0f19 65%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="chapter-num" style="position: absolute; left: 45%; top: 12%; height: 75%; width: 55%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+06
+
+</div>
+
+<div class="fadeInLeft" style="position: absolute; left: 6%; top: 22%; height: 56%; width: 70%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+<span class="kicker">Chapter 06</span>
+
+# Getting <span class="grad">Started</span>
+
+<span class="dots"><i></i><i></i><i></i><i></i><i></i><i class="on"></i></span>
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## Your first steps
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>06</b> · Getting Started
+
+</div>
+
+<div class="steps" style="position: absolute; left: 4%; top: 20%; height: 76%; width: 80%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+1. Install **Nix** on your current machine (Linux / macOS / WSL) <!-- .element: class="fragment" -->
+2. Try things ad-hoc: `nix shell nixpkgs#cowsay` <!-- .element: class="fragment" -->
+3. Add a `flake.nix` dev shell to one project <!-- .element: class="fragment" -->
+4. Manage your dotfiles with **Home Manager** <!-- .element: class="fragment" -->
+5. Spin up **NixOS in a VM** and port your config <!-- .element: class="fragment" -->
+6. Move a real server — and enjoy fearless upgrades <!-- .element: class="fragment" -->
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="linear-gradient(135deg, #0b0f19 0%, #1d2b4f 55%, #5277C3 100%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="center-text big-icon" style="position: absolute; left: 0%; top: 20%; height: 20%; width: 100%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+🎬
+
+</div>
+
+<div class="center-text zoomIn" style="position: absolute; left: 0%; top: 42%; height: 20%; width: 100%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+# Live <span class="grad">Demo</span>
+
+</div>
+
+<div class="center-text fadeInUp" style="position: absolute; left: 0%; top: 66%; height: 10%; width: 100%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+<span class="pill">rebuild</span> <span class="pill">break it</span> <span class="pill">roll back</span>
+
+</div>
+</div>
+
+<aside class="notes"><p>Demo script:</p>
+<ol>
+<li>Show configuration.nix</li>
+<li>Add a package / service, <code>nixos-rebuild switch</code></li>
+<li>Introduce a deliberate mistake</li>
+<li><code>nixos-rebuild switch --rollback</code></li>
+</ol>
+</aside></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="" style="position: absolute; left: 4%; top: 4%; height: 14%; width: 92%; display: flex; flex-direction: column; align-items: start; justify-content: center" >
+
+
+## 📚 Resources
+
+</div>
+
+<div class="crumb" style="position: absolute; left: 56%; top: 1%; height: 6%; width: 40%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="right">
+
+
+<b>06</b> · Getting Started
+
+</div>
+
+<div class="card" style="padding: 0 26px; box-sizing: border-box; position: absolute; left: 4%; top: 24%; height: 58%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 🏛️ Official
+
+- nixos.org/manual
+- search.nixos.org
+- wiki.nixos.org
+
+</div>
+
+<div class="card" style="padding: 0 26px; box-sizing: border-box; position: absolute; left: 52%; top: 24%; height: 58%; width: 44%; display: flex; flex-direction: column; align-items: start; justify-content: space-evenly" align="left">
+
+
+### 🤝 Community
+
+- nix.dev (tutorials)
+- NixOS & Flakes Book
+- discourse.nixos.org
+
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="drop" data-background-gradient="radial-gradient(circle at 50% 40%, #24365f 0%, #0b0f19 62%)" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 720px; width: 1280px; min-height: 720px; display: flex; flex-direction: column; align-items: start; justify-content: center" absolute="true">
+
+<div class="flake center-text" style="position: absolute; left: 20%; top: 0%; height: 100%; width: 60%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+❄︎
+
+</div>
+
+<div class="center-text" style="position: absolute; left: 0%; top: 30%; height: 22%; width: 100%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+# <span class="grad">Questions?</span>
+
+</div>
+
+<div class="center-text fadeIn slow" style="position: absolute; left: 0%; top: 54%; height: 10%; width: 100%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+<span class="tagline">Thank you!</span>
+
+</div>
+
+<div class="center-text" style="position: absolute; left: 0%; top: 84%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: start; justify-content: center" align="center">
+
+
+<span class="muted">github.com/nullnummer24</span>
+
+</div>
+</div></script></section></div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/math/math.js"></script>
+	<script src="plugin/mermaid/mermaid.js"></script>
+	<script src="plugin/chart/chart.min.js"></script>
+	<script src="plugin/chart/plugin.js"></script>
+	<script src="plugin/menu/menu.js"></script>
+	<script src="plugin/customcontrols/plugin.js"></script>
+
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+	  function isLight(color) {
+		let hex = color.replace('#', '');
+
+		// convert #fff => #ffffff
+		if(hex.length == 3){
+			hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+		}
+
+		const c_r = parseInt(hex.substr(0, 2), 16);
+		const c_g = parseInt(hex.substr(2, 2), 16);
+		const c_b = parseInt(hex.substr(4, 2), 16);
+		const brightness = ((c_r * 299) + (c_g * 587) + (c_b * 114)) / 1000;
+		return brightness > 155;
+	}
+
+	var bgColor = getComputedStyle(document.documentElement).getPropertyValue('--r-background-color').trim();
+	var isLight = isLight(bgColor);
+
+	if(isLight){
+		document.body.classList.add('has-light-background');
+	} else {
+		document.body.classList.add('has-dark-background');
+	}
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath.MathJax3,
+		  RevealMermaid,
+		  RevealChart,
+		  RevealCustomControls,
+		  RevealMenu,
+        ],
+
+
+    	allottedTime: 120 * 1000,
+
+		mathjax3: {
+			mathjax: 'plugin/math/mathjax/tex-mml-chtml.js',
+		},
+		markdown: {
+		  gfm: true,
+		  mangle: true,
+		  pedantic: false,
+		  smartLists: false,
+		  smartypants: false,
+		},
+
+		mermaid: {
+			theme: isLight ? 'default' : 'dark',
+		},
+
+		customcontrols: {
+			controls: [
+				{id: 'toggle-overview',
+				title: 'Toggle overview (O)',
+				icon: '<i class="fa fa-th"></i>',
+				action: 'Reveal.toggleOverview();'
+				},
+			]
+		},
+		menu: {
+			loadIcons: false
+		}
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"width":1280,"height":720,"margin":0.04,"controls":true,"progress":true,"slideNumber":true,"center":false,"transition":"slide","transitionSpeed":"default"}, queryOptions);
+    </script>
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+
+  <!-- created with Advanced Slides -->
+</html>
